@@ -34,14 +34,20 @@ h2{margin:5px 0 6px;font-size:21px;line-height:1.15}
 .overall-badge small{display:block;font-size:9px;font-weight:750;color:var(--muted);line-height:1}
 .links{display:flex;gap:8px;margin:14px 0}
 .links a{color:var(--accent);text-decoration:none;border:1px solid var(--line);padding:9px 11px;border-radius:10px;font-size:13px;font-weight:750;background:white}
-.decision-row{display:flex;justify-content:space-between;align-items:center;gap:10px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:11px 0;margin-bottom:14px;font-size:14px;font-weight:750}
-select{padding:8px 10px;border-radius:9px;border:1px solid var(--line);background:white;font:inherit}
+.decision-row{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:12px 0;margin-bottom:14px}
+.decision-label{font-size:14px;font-weight:780;margin-bottom:9px}
+.decision-buttons{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.decision-btn{height:40px;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;font:inherit;font-weight:800;touch-action:manipulation}
+.decision-btn.selected{border-color:#1e1c19;box-shadow:0 0 0 2px #fff inset,0 1px 5px rgba(0,0,0,.16)}
+.decision-btn.yes.selected{background:#2f7d4a;color:#fff}
+.decision-btn.maybe.selected{background:#b78624;color:#fff}
+.decision-btn.no.selected{background:#a33c35;color:#fff}
 .criterion{margin:15px 0 18px}
 .criterion-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
 .criterion-title{font-size:16px;font-weight:760}
 .criterion-score{font-size:17px;font-weight:850}
-.score-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
-.score-btn{height:44px;border:2px solid transparent;border-radius:10px;color:#fff;font-size:16px;font-weight:850;box-shadow:inset 0 0 0 1px rgba(0,0,0,.05);touch-action:manipulation}
+.score-grid{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:4px}
+.score-btn{height:38px;min-width:0;padding:0;border:2px solid transparent;border-radius:8px;color:#fff;font-size:16px;font-weight:850;box-shadow:inset 0 0 0 1px rgba(0,0,0,.05);touch-action:manipulation}
 .score-btn.selected{border-color:#1e1c19;box-shadow:0 0 0 2px #fff inset,0 1px 5px rgba(0,0,0,.18);transform:translateY(-1px)}
 .scale-caption{display:flex;justify-content:space-between;margin-top:6px;color:var(--muted);font-size:11px}
 .notes-label{display:block;font-size:14px;font-weight:800;margin-top:8px}
@@ -50,6 +56,7 @@ textarea{width:100%;min-height:78px;resize:vertical;margin-top:7px;border:1px so
 .summary-box h2{margin-top:0}
 .summary-box textarea{min-height:250px;background:#15120f;color:#f7f2e8;border-color:#3f352d;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
 .small{color:#beb3a8;font-size:12px}
+@media(max-width:430px){.score-btn{height:36px;font-size:14px;border-radius:7px}.score-grid{gap:3px}.card{padding:14px}}
 @media(min-width:760px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 </head>
@@ -154,7 +161,11 @@ function render(){
     '<div class="card-top"><div><div class="group">'+car.group+'</div><h2>'+car.name+'</h2><p class="spec">'+car.spec+'</p></div>'+
     '<div class="overall-badge"><div>'+(overall?overall.toFixed(1):"—")+'<small>OVERALL</small></div></div></div>'+
     '<div class="links"><a href="'+googleUrl(car.name,false)+'" target="_blank" rel="noopener external">Google search</a><a href="'+googleUrl(car.name,true)+'" target="_blank" rel="noopener external">Images</a></div>'+
-    '<div class="decision-row"><label>Would I actually consider it?</label><select onchange="setDecision('+i+',this.value)"><option value="">—</option><option'+(d.decision==="Yes"?" selected":"")+'>Yes</option><option'+(d.decision==="Maybe"?" selected":"")+'>Maybe</option><option'+(d.decision==="No"?" selected":"")+'>No</option></select></div>'+
+    '<div class="decision-row"><div class="decision-label">Would I actually consider it?</div><div class="decision-buttons">'+
+    '<button type="button" class="decision-btn yes'+(d.decision==="Yes"?" selected":"")+'" onclick="setDecision('+i+',\'Yes\')">Yes</button>'+
+    '<button type="button" class="decision-btn maybe'+(d.decision==="Maybe"?" selected":"")+'" onclick="setDecision('+i+',\'Maybe\')">Maybe</button>'+
+    '<button type="button" class="decision-btn no'+(d.decision==="No"?" selected":"")+'" onclick="setDecision('+i+',\'No\')">No</button>'+
+    '</div></div>'+
     criterionHtml+
     '<label class="notes-label">Notes / instant reaction<textarea placeholder="e.g. love the interior, exterior too anonymous…" oninput="setNotes('+i+',this.value)">'+escapeHtml(d.notes||"")+'</textarea></label>';
    grid.appendChild(article);
@@ -167,7 +178,7 @@ function escapeHtml(s){
 function ensure(i){if(!store[i])store[i]=emptyData()}
 function persist(){localStorage.setItem(KEY,JSON.stringify(store))}
 function setScore(i,key,n){ensure(i);store[i].scores[key]=n;persist();render()}
-function setDecision(i,v){ensure(i);store[i].decision=v;persist();renderSummary()}
+function setDecision(i,v){ensure(i);store[i].decision=(store[i].decision===v?"":v);persist();render()}
 function setNotes(i,v){ensure(i);store[i].notes=v;persist();renderSummary()}
 function renderSummary(){
  const lines=["CAR TASTE FEEDBACK","Scale: 1–10. Overall = automatic mean of Exterior, Road presence, Interior and Uniqueness.",""];
