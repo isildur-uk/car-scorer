@@ -30,6 +30,10 @@ main{padding:16px 10px 70px}
 .group{color:#a07a56;font-size:12px;font-weight:850;text-transform:uppercase;letter-spacing:.12em}
 h2{margin:5px 0 6px;font-size:21px;line-height:1.15}
 .spec{margin:0;color:var(--muted);font-size:13px;line-height:1.45}
+.meta-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.price-pill,.new-pill{display:inline-flex;align-items:center;border-radius:999px;padding:5px 8px;font-size:11px;font-weight:850}
+.price-pill{background:#eee7dc;color:#4d3e31}
+.new-pill{background:#223c2b;color:#fff}
 .overall-badge{min-width:58px;height:58px;padding:0 7px;border-radius:50%;display:grid;place-items:center;background:var(--soft);font-weight:850;font-size:18px;text-align:center}
 .overall-badge small{display:block;font-size:9px;font-weight:750;color:var(--muted);line-height:1}
 .links{display:flex;gap:8px;margin:14px 0}
@@ -64,10 +68,12 @@ textarea{width:100%;min-height:78px;resize:vertical;margin-top:7px;border:1px so
 <header>
 <div class="wrap">
 <h1>Car Taste Scoring Board</h1>
-<p>Tap a score from 1–10. Overall is calculated automatically from Exterior, Road presence, Interior and Uniqueness.</p>
+<p>Tap a score from 1–10. Overall is automatic. Round 2 cars include an indicative current UK asking-price guide.</p>
 <div class="toolbar">
 <button class="action primary" onclick="copySummary()">Copy feedback</button>
 <button class="action" onclick="sortCards('overall')">Sort by overall</button>
+<button class="action" onclick="sortCards('price')">Sort by price</button>
+<button class="action" id="newOnlyBtn" onclick="toggleNewOnly()">New options only</button>
 <button class="action" onclick="sortCards('name')">Sort A–Z</button>
 <button class="action" onclick="resetAll()">Reset all</button>
 </div>
@@ -84,7 +90,7 @@ textarea{width:100%;min-height:78px;resize:vertical;margin-top:7px;border:1px so
 </section>
 </main>
 <script>
-const cars=[{"name":"Lexus LS 600h L","group":"Japanese","spec":"Rear Seat Relaxation • Ivory / Parchment • Walnut"},{"name":"Toyota Crown Majesta Hybrid","group":"Japanese","spec":"F Version • cream leather • wood"},{"name":"Toyota Century G50","group":"Japanese","spec":"V12 • wool or pale leather • extensive wood"},{"name":"Lexus SC430","group":"Japanese","spec":"Ecru / Ivory leather • wood • Mark Levinson"},{"name":"Lexus GS450h Luxury","group":"Japanese","spec":"Luxury / Premier • Ivory / cream • wood"},{"name":"Jaguar XJ / XJL X351","group":"Jaguar / Daimler","spec":"Portfolio / Autobiography • Ivory / London Tan • walnut"},{"name":"Jaguar XK X150","group":"Jaguar / Daimler","spec":"5.0 Portfolio • Ivory • walnut"},{"name":"Daimler Super Eight X358","group":"Jaguar / Daimler","spec":"Ivory hide • traditional walnut • supercharged V8"},{"name":"Mercedes SL500 R230","group":"Mercedes","spec":"Cream / beige • wood"},{"name":"Mercedes CL500 C216","group":"Mercedes","spec":"Beige / cream leather • Burr Walnut • wood/leather wheel"},{"name":"Mercedes S500L W221","group":"Mercedes","spec":"Sahara / Savanna beige • Burr Walnut • rear comfort equipment"},{"name":"Bentley Continental GT","group":"Bentley","spec":"Mulliner • pale leather • Burr Walnut"},{"name":"Bentley Flying Spur","group":"Bentley","spec":"Mulliner • pale leather • Burr Walnut"},{"name":"Volkswagen Phaeton","group":"German","spec":"W12 / 4.2 V8 • ideally LWB / 4-seat"},{"name":"Audi A8L D4","group":"German","spec":"Comfort / Executive seats • beige Valcona • walnut"},{"name":"BMW 750Li / 760Li F02","group":"German","spec":"BMW Individual • Champagne / Oyster • Walnut"},{"name":"Chrysler 300C HEMI","group":"Other","spec":"5.7 V8 • Luxury Pack • walnut"},{"name":"Genesis Electrified G80","group":"Other","spec":"Luxury • pale Nappa • wood"}];
+const cars=[{"name":"Lexus LS 600h L","group":"Japanese","spec":"Rear Seat Relaxation • Ivory / Parchment • Walnut"},{"name":"Toyota Crown Majesta Hybrid","group":"Japanese","spec":"F Version • cream leather • wood"},{"name":"Toyota Century G50","group":"Japanese","spec":"V12 • wool or pale leather • extensive wood"},{"name":"Lexus SC430","group":"Japanese","spec":"Ecru / Ivory leather • wood • Mark Levinson"},{"name":"Lexus GS450h Luxury","group":"Japanese","spec":"Luxury / Premier • Ivory / cream • wood"},{"name":"Jaguar XJ / XJL X351","group":"Jaguar / Daimler","spec":"Portfolio / Autobiography • Ivory / London Tan • walnut"},{"name":"Jaguar XK X150","group":"Jaguar / Daimler","spec":"5.0 Portfolio • Ivory • walnut"},{"name":"Daimler Super Eight X358","group":"Jaguar / Daimler","spec":"Ivory hide • traditional walnut • supercharged V8"},{"name":"Mercedes SL500 R230","group":"Mercedes","spec":"Cream / beige • wood"},{"name":"Mercedes CL500 C216","group":"Mercedes","spec":"Beige / cream leather • Burr Walnut • wood/leather wheel"},{"name":"Mercedes S500L W221","group":"Mercedes","spec":"Sahara / Savanna beige • Burr Walnut • rear comfort equipment"},{"name":"Bentley Continental GT","group":"Bentley","spec":"Mulliner • pale leather • Burr Walnut"},{"name":"Bentley Flying Spur","group":"Bentley","spec":"Mulliner • pale leather • Burr Walnut"},{"name":"Volkswagen Phaeton","group":"German","spec":"W12 / 4.2 V8 • ideally LWB / 4-seat"},{"name":"Audi A8L D4","group":"German","spec":"Comfort / Executive seats • beige Valcona • walnut"},{"name":"BMW 750Li / 760Li F02","group":"German","spec":"BMW Individual • Champagne / Oyster • Walnut"},{"name":"Chrysler 300C HEMI","group":"Other","spec":"5.7 V8 • Luxury Pack • walnut"},{"name":"Genesis Electrified G80","group":"Other","spec":"Luxury • pale Nappa • wood"},{"name":"Lexus LS430","group":"Round 2 • Japanese","spec":"2001–06 • Ivory / Ecru • walnut • Mark Levinson • rear luxury kit","isNew":true,"price":8840,"priceLabel":"≈ £8.8k avg asking"},{"name":"Lexus LS460 SE-L","group":"Round 2 • Japanese","spec":"2007+ • pale leather • walnut • reclining / ventilated luxury seats","isNew":true,"price":6677,"priceLabel":"≈ £6.7k avg asking"},{"name":"Toyota Crown Majesta S180 4.3 V8","group":"Round 2 • Japanese","spec":"2004–09 • older formal shape • rear recline / blinds • lots of equipment","isNew":true,"price":9995,"priceLabel":"≈ £10k UK guide"},{"name":"Toyota Crown Majesta S200 4.6 V8","group":"Round 2 • Japanese","spec":"2009–13 • G Type / F Package • cream interior • rear luxury equipment","isNew":true,"price":9656,"priceLabel":"≈ £9.7k current asking"},{"name":"Toyota Crown Royal Saloon GRS200","group":"Round 2 • Japanese","spec":"2008–12 • Royal Saloon G • cream / wood • more understated than Majesta","isNew":true,"price":9000,"priceLabel":"≈ £9k UK guide"},{"name":"Mercedes CL500 C215","group":"Round 2 • Mercedes","spec":"1999–06 • pillarless V8 coupé • beige leather • burr walnut • gadget-heavy","isNew":true,"price":6270,"priceLabel":"≈ £6.3k avg asking"},{"name":"Mercedes S500L W220","group":"Round 2 • Mercedes","spec":"1999–06 • LWB • beige leather • walnut • rear comfort / old-school S-Class","isNew":true,"price":6167,"priceLabel":"≈ £6.2k asking sample"},{"name":"Jaguar XJR X350 4.2 V8","group":"Round 2 • Jaguar","spec":"2003–09 • traditional XJ shape • supercharged V8 • wood / pale leather available","isNew":true,"price":11222,"priceLabel":"≈ £11.2k avg asking"},{"name":"Bentley Arnage","group":"Round 2 • Bentley","spec":"1998–09 • pale hide • vast walnut • formal old-world Bentley presence","isNew":true,"price":20172,"priceLabel":"≈ £20.2k avg asking"},{"name":"Rolls-Royce Silver Seraph","group":"Round 2 • Other","spec":"1998–02 • pale hide • deep walnut • extremely traditional flagship shape","isNew":true,"price":36997,"priceLabel":"≈ £37k avg asking"}];
 const criteria=[
  {key:"exterior",label:"Exterior"},
  {key:"presence",label:"Road presence"},
@@ -133,6 +139,7 @@ function loadStore(){
  return {};
 }
 let store=loadStore();
+let showNewOnly=false;
 
 function overallFor(i){
  const s=(store[i]||emptyData()).scores;
@@ -143,6 +150,7 @@ function render(){
  const grid=document.getElementById("grid");
  grid.innerHTML="";
  cars.forEach((car,i)=>{
+   if(showNewOnly && !car.isNew) return;
    const d=store[i]||emptyData();
    const article=document.createElement("article");
    article.className="card";
@@ -158,7 +166,9 @@ function render(){
      criterionHtml+='<div class="criterion"><div class="criterion-head"><span class="criterion-title">'+c.label+'</span><span class="criterion-score">'+(value||"—")+'</span></div><div class="score-grid">'+buttons+'</div><div class="scale-caption"><span>1 — dislike</span><span>10 — love</span></div></div>';
    });
    article.innerHTML=
-    '<div class="card-top"><div><div class="group">'+car.group+'</div><h2>'+car.name+'</h2><p class="spec">'+car.spec+'</p></div>'+
+    '<div class="card-top"><div><div class="group">'+car.group+'</div><h2>'+car.name+'</h2><p class="spec">'+car.spec+'</p>'+
+    (car.priceLabel?'<div class="meta-row"><span class="price-pill">'+car.priceLabel+'</span>'+(car.isNew?'<span class="new-pill">NEW</span>':'')+'</div>':'')+
+    '</div>'+
     '<div class="overall-badge"><div>'+(overall?overall.toFixed(1):"—")+'<small>OVERALL</small></div></div></div>'+
     '<div class="links"><a href="'+googleUrl(car.name,false)+'" target="_blank" rel="noopener external">Google search</a><a href="'+googleUrl(car.name,true)+'" target="_blank" rel="noopener external">Images</a></div>'+
     '<div class="decision-row"><div class="decision-label">Would I actually consider it?</div><div class="decision-buttons">'+
@@ -188,6 +198,7 @@ function renderSummary(){
    if(!has)return;
    lines.push("## "+car.name);
    if(d.decision)lines.push("Consider: "+d.decision);
+   if(car.priceLabel)lines.push("Indicative UK price: "+car.priceLabel.replace("≈ ",""));
    const bits=criteria.filter(c=>Number(d.scores[c.key])>0).map(c=>c.label+" "+d.scores[c.key]);
    if(bits.length)lines.push(bits.join(" | "));
    const ov=overallFor(i);
@@ -210,9 +221,20 @@ function sortCards(mode){
  nodes.sort((a,b)=>{
    const ia=Number(a.dataset.carCard),ib=Number(b.dataset.carCard);
    if(mode==="name")return cars[ia].name.localeCompare(cars[ib].name);
+   if(mode==="price"){
+     const pa=Number(cars[ia].price)||Number.MAX_SAFE_INTEGER;
+     const pb=Number(cars[ib].price)||Number.MAX_SAFE_INTEGER;
+     return pa-pb;
+   }
    return overallFor(ib)-overallFor(ia);
  });
  nodes.forEach(n=>grid.appendChild(n));
+}
+function toggleNewOnly(){
+ showNewOnly=!showNewOnly;
+ const btn=document.getElementById("newOnlyBtn");
+ if(btn)btn.classList.toggle("primary",showNewOnly);
+ render();
 }
 function resetAll(){
  if(!confirm("Clear every score and note?"))return;
